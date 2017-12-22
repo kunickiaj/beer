@@ -18,17 +18,17 @@ package cmd
 import (
 	"fmt"
 
+	jira "github.com/andygrunwald/go-jira"
 	"github.com/docker/docker/cli"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var brewCmd = &cobra.Command{
 	Use:   "brew",
 	Short: "Work on an existing JIRA or create a new ticket. Not specifying an ISSUE_ID creates a new JIRA.",
 	Long:  ``,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("brew called with arg", args[0])
-	},
+	Run:   brew,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cli.RequiresMaxArgs(1)(cmd, args); err != nil {
 			return err
@@ -43,4 +43,32 @@ func init() {
 	RootCmd.AddCommand(brewCmd)
 
 	brewCmd.Flags().VarP(&issueTypeVar, "issue-type", "t", "Issue type to create")
+}
+
+func brew(cmd *cobra.Command, args []string) {
+	dryRun, _ := cmd.Flags().GetBool("dry-run")
+
+	username := viper.GetString("jira.username")
+	password := viper.GetString("jira.password")
+	server := viper.GetString("jira.server")
+
+	jiraClient, _ := jira.NewClient(nil, server)
+	jiraClient.Authentication.SetBasicAuth(username, password)
+
+	if len(args) == 0 {
+		// Creating a new JIRA
+		if dryRun {
+			fmt.Println("Would create new issue, but this is a dry run.")
+		}
+	}
+
+	issueID := args[0]
+
+	// Fetch details for existing issue
+	issue, _, err := jiraClient.Issue.Get(issueID, nil)
+	if err != nil {
+		fmt.Println("Error fetching issue:", err)
+	} else {
+		fmt.Println("Fetched issue details:", issue.Key, issue.Fields.Summary)
+	}
 }

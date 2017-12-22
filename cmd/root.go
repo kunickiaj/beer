@@ -25,6 +25,8 @@ import (
 )
 
 var cfgFile string
+var jiraConfig JiraConfig
+var gerritConfig GerritConfig
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -54,10 +56,17 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.beer.yaml)")
+	RootCmd.PersistentFlags().Bool("dry-run", false, "Parses command syntax but does not make changes to JIRA or git")
+	RootCmd.PersistentFlags().String("jira-server", "", "URL of JIRA server. Should end with slash")
+	RootCmd.PersistentFlags().String("jira-username", "", "JIRA username")
+	RootCmd.PersistentFlags().String("jira-password", "", "JIRA password")
+	RootCmd.PersistentFlags().String("gerrit-url", "", "Gerrit SSH URL")
+
+	viper.BindPFlag("jira.server", RootCmd.PersistentFlags().Lookup("jira-server"))
+	viper.BindPFlag("jira.username", RootCmd.PersistentFlags().Lookup("jira-username"))
+	viper.BindPFlag("jira.password", RootCmd.PersistentFlags().Lookup("jira-password"))
+	viper.BindPFlag("gerrit.url", RootCmd.PersistentFlags().Lookup("gerrit-url"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -83,5 +92,15 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+
+	fmt.Println("All keys ", viper.AllKeys())
+
+	if err := viper.UnmarshalKey("jira", &jiraConfig); err == nil {
+		fmt.Println("Parsed JIRA config.")
+	}
+
+	if err := viper.UnmarshalKey("gerrit", &gerritConfig); err == nil {
+		fmt.Println("Parsed Gerrit config.")
 	}
 }
