@@ -58,12 +58,12 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.beer.yaml)")
 	RootCmd.PersistentFlags().Bool("dry-run", false, "Parses command syntax but does not make changes to JIRA or git")
-	RootCmd.PersistentFlags().String("jira-server", "", "URL of JIRA server. Should end with slash")
+	RootCmd.PersistentFlags().String("jira-url", "", "URL of JIRA server. Should end with slash")
 	RootCmd.PersistentFlags().String("jira-username", "", "JIRA username")
 	RootCmd.PersistentFlags().String("jira-password", "", "JIRA password")
 	RootCmd.PersistentFlags().String("gerrit-url", "", "Gerrit SSH URL")
 
-	viper.BindPFlag("jira.server", RootCmd.PersistentFlags().Lookup("jira-server"))
+	viper.BindPFlag("jira.url", RootCmd.PersistentFlags().Lookup("jira-url"))
 	viper.BindPFlag("jira.username", RootCmd.PersistentFlags().Lookup("jira-username"))
 	viper.BindPFlag("jira.password", RootCmd.PersistentFlags().Lookup("jira-password"))
 	viper.BindPFlag("gerrit.url", RootCmd.PersistentFlags().Lookup("gerrit-url"))
@@ -98,6 +98,7 @@ func initConfig() {
 
 	if err := viper.UnmarshalKey("jira", &jiraConfig); err == nil {
 		fmt.Println("Parsed JIRA config.")
+		fmt.Println("url: " + jiraConfig.Server)
 	}
 
 	if err := viper.UnmarshalKey("gerrit", &gerritConfig); err == nil {
