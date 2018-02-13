@@ -1,6 +1,9 @@
 # VSCode settings
 .vscode
 
+# IntelliJ Project
+.idea
+
 # Test binary, build with `go test -c`
 *.test
 
