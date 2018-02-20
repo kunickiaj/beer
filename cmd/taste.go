@@ -31,10 +31,7 @@ var tasteCmd = &cobra.Command{
 	Long:  ``,
 	Run:   taste,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cli.ExactArgs(0)(cmd, args); err != nil {
-			return err
-		}
-		return nil
+		return cli.ExactArgs(0)(cmd, args)
 	},
 }
 

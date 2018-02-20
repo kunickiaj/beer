@@ -35,10 +35,7 @@ var brewCmd = &cobra.Command{
 	Long:  ``,
 	Run:   brew,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cli.RequiresMaxArgs(1)(cmd, args); err != nil {
-			return err
-		}
-		return nil
+		return cli.RequiresMaxArgs(1)(cmd, args)
 	},
 }
 
