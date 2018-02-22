@@ -23,7 +23,6 @@ import (
 	"regexp"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/docker/docker/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/libgit2/git2go.v26"
@@ -34,9 +33,7 @@ var brewCmd = &cobra.Command{
 	Short: "Work on an existing JIRA or create a new ticket. Not specifying an ISSUE_ID creates a new JIRA.",
 	Long:  ``,
 	Run:   brew,
-	Args: func(cmd *cobra.Command, args []string) error {
-		return cli.RequiresMaxArgs(1)(cmd, args)
-	},
+	Args:  cobra.MaximumNArgs(1),
 }
 
 const testingStatusKey = "Testing Status"

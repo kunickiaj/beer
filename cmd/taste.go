@@ -20,7 +20,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/docker/docker/cli"
 	"github.com/spf13/cobra"
 	git "gopkg.in/libgit2/git2go.v26"
 )
@@ -30,9 +29,7 @@ var tasteCmd = &cobra.Command{
 	Short: "Push a review for the current branch, optionally specifying reviewers by email.",
 	Long:  ``,
 	Run:   taste,
-	Args: func(cmd *cobra.Command, args []string) error {
-		return cli.ExactArgs(0)(cmd, args)
-	},
+	Args:  cobra.ExactArgs(0),
 }
 
 var draft bool
