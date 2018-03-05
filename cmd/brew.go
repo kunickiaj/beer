@@ -79,6 +79,12 @@ func brew(cmd *cobra.Command, args []string) {
 
 	defer repo.Free()
 
+	// Get user struct for logged in user
+	jiraUser, _, err := jiraClient.User.Get(username)
+	if err != nil {
+		panic(err)
+	}
+
 	var issue *jira.Issue
 	if len(args) > 0 {
 		issueKey := args[0]
@@ -92,6 +98,14 @@ func brew(cmd *cobra.Command, args []string) {
 
 		if dryRun {
 			return
+		}
+
+		// Ensure issue is assigned to self
+		assignee := map[string]interface{}{"Assignee": jiraUser}
+
+		_, err := jiraClient.Issue.UpdateIssue(issue.ID, assignee)
+		if err != nil {
+			panic(err)
 		}
 
 	} else {
@@ -131,11 +145,13 @@ func brew(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		fieldsConfig := make(map[string]string)
-		fieldsConfig["Project"] = projectKey
-		fieldsConfig["Issue Type"] = string(issueType)
-		fieldsConfig["Summary"] = summary
-		fieldsConfig["Description"] = description
+		fieldsConfig := map[string]string{
+			"Project":     projectKey,
+			"Issue Type":  string(issueType),
+			"Summary":     summary,
+			"Description": description,
+			"Assignee":    jiraUser.Key,
+		}
 
 		fields, err := metaIssueType.GetAllFields()
 		if err != nil {
