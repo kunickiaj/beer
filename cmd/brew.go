@@ -25,7 +25,7 @@ import (
 	jira "github.com/andygrunwald/go-jira"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/libgit2/git2go.v26"
+	"gopkg.in/libgit2/git2go.v27"
 )
 
 var brewCmd = &cobra.Command{
