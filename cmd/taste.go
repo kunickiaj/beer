@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	git "gopkg.in/libgit2/git2go.v26"
+	git "gopkg.in/libgit2/git2go.v27"
 )
 
 var tasteCmd = &cobra.Command{
