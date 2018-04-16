@@ -23,6 +23,7 @@ import (
 	"regexp"
 
 	jira "github.com/andygrunwald/go-jira"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/libgit2/git2go.v27"
@@ -92,7 +93,7 @@ func brew(cmd *cobra.Command, args []string) {
 		// Fetch details for existing issue
 		issue, _, err = jiraClient.Issue.Get(issueKey, nil)
 		if err != nil {
-			fmt.Printf("Error fetching issue: %s\n", err)
+			log.WithField("error", err).Fatal("Error fetching issue")
 			return
 		}
 
@@ -111,7 +112,7 @@ func brew(cmd *cobra.Command, args []string) {
 	} else {
 		// Creating a new JIRA
 		if summary == "" {
-			fmt.Println("When creating a new issue, an issue summary is required.")
+			log.Error("When creating a new issue, an issue summary is required.")
 			return
 		}
 
@@ -120,7 +121,7 @@ func brew(cmd *cobra.Command, args []string) {
 		}
 
 		if dryRun {
-			fmt.Printf("Dry Run -- Summary: %s, Description %s\n", summary, description)
+			log.WithFields(log.Fields{"summary": summary, "description": description}).Info("Dry Run")
 			return
 		}
 
@@ -128,20 +129,20 @@ func brew(cmd *cobra.Command, args []string) {
 		if len(projectKey) == 0 {
 			projectKey, err = getProjectKey(repo)
 			if err != nil {
-				fmt.Println(err)
+				log.WithField("error", err).Fatal()
 				return
 			}
 		}
 
 		metaProject, err := createMetaProject(jiraClient, projectKey)
 		if err != nil {
-			fmt.Println(err)
+			log.WithField("error", err).Fatal()
 			return
 		}
 
 		metaIssueType, err := createMetaIssueType(metaProject, string(issueType))
 		if err != nil {
-			fmt.Println(err)
+			log.WithField("error", err).Fatal()
 			return
 		}
 
@@ -155,7 +156,7 @@ func brew(cmd *cobra.Command, args []string) {
 
 		fields, err := metaIssueType.GetAllFields()
 		if err != nil {
-			fmt.Println(err)
+			log.WithField("error", err).Fatal()
 			return
 		}
 
@@ -177,28 +178,27 @@ func brew(cmd *cobra.Command, args []string) {
 
 		issue, err = jira.InitIssueWithMetaAndFields(metaProject, metaIssueType, fieldsConfig)
 		if err != nil {
-			fmt.Println(err)
+			log.WithField("error", err).Fatal()
 			return
 		}
-		fmt.Println(issue)
+		log.WithField("issue", issue).Debug("Initialized Issue")
 
 		var res *jira.Response
 		issue, res, err = jiraClient.Issue.Create(issue)
 		if err != nil {
-			fmt.Println(err)
-			fmt.Println(bodyToString(res))
+			log.WithFields(log.Fields{"error": err, "response": bodyToString(res)}).Fatal()
 			return
 		}
 		issue, _, err = jiraClient.Issue.Get(issue.Key, nil)
 		if err != nil {
-			fmt.Printf("error fetching issue details: %s\n", err)
+			log.WithFields(log.Fields{"error": err, "key": issue.Key}).Fatal("Error fetching issue details")
 			return
 		}
 	}
 
 	err = checkout(repo, issue)
 	if err != nil {
-		fmt.Println(err)
+		log.WithField("error", err).Fatal()
 		return
 	}
 }
@@ -296,7 +296,7 @@ func getProjectKey(repo *git.Repository) (string, error) {
 		message := commit.Message()
 		match := re.FindStringSubmatch(message)
 		if len(match) == 3 && len(match[1]) > 0 {
-			fmt.Printf("Inferred project key: %s, override with --project if incorrect\n", match[1])
+			log.WithField("project_key", match[1]).Info("Inferred project key; override with --project if incorrect")
 			return match[1], nil
 		}
 		depth++
