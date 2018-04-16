@@ -2,7 +2,7 @@ package cmd
 
 // JiraConfig configuration structure for JIRA
 type JiraConfig struct {
-	Server   string
+	URL      string
 	Username string
 	Password string
 }

@@ -16,17 +16,20 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-var jiraConfig JiraConfig
-var gerritConfig GerritConfig
+var (
+	debugMode    bool
+	cfgFile      string
+	jiraConfig   JiraConfig
+	gerritConfig GerritConfig
+)
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -48,7 +51,7 @@ For example:
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		log.WithField("error", err).Fatal("Fatal Error")
 		os.Exit(1)
 	}
 }
@@ -57,6 +60,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.beer.yaml)")
+	RootCmd.PersistentFlags().BoolVar(&debugMode, "debug", false, "Enables debug messages")
 	RootCmd.PersistentFlags().Bool("dry-run", false, "Parses command syntax but does not make changes to JIRA or git")
 	RootCmd.PersistentFlags().String("jira-url", "", "URL of JIRA server. Should end with slash")
 	RootCmd.PersistentFlags().String("jira-username", "", "JIRA username")
@@ -71,6 +75,11 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	// Init log level
+	if debugMode {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -78,7 +87,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
+			log.WithField("error", err).Fatal("Unable to find home directory")
 			os.Exit(1)
 		}
 
@@ -91,17 +100,16 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.WithField("config", viper.ConfigFileUsed()).Debug("Using config file")
 	}
 
-	fmt.Println("All keys ", viper.AllKeys())
+	log.WithField("config_keys", viper.AllKeys()).Debug("Configuration keys")
 
 	if err := viper.UnmarshalKey("jira", &jiraConfig); err == nil {
-		fmt.Println("Parsed JIRA config.")
-		fmt.Println("url: " + jiraConfig.Server)
+		log.WithField("jira_url", jiraConfig.URL).Debug("Parsed JIRA config")
 	}
 
 	if err := viper.UnmarshalKey("gerrit", &gerritConfig); err == nil {
-		fmt.Println("Parsed Gerrit config.")
+		log.WithField("gerrit_url", gerritConfig.URL).Debug("Parse Gerrit config")
 	}
 }
