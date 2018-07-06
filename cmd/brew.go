@@ -23,10 +23,10 @@ import (
 	"regexp"
 
 	jira "github.com/andygrunwald/go-jira"
+	git "github.com/libgit2/git2go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/libgit2/git2go.v27"
 )
 
 var brewCmd = &cobra.Command{
@@ -102,11 +102,15 @@ func brew(cmd *cobra.Command, args []string) {
 		}
 
 		// Ensure issue is assigned to self
-		assignee := map[string]interface{}{"Assignee": jiraUser}
+		assignee := map[string]interface{}{"fields": map[string]interface{}{"assignee": jiraUser}}
 
-		_, err := jiraClient.Issue.UpdateIssue(issue.ID, assignee)
+		response, err := jiraClient.Issue.UpdateIssue(issue.ID, assignee)
 		if err != nil {
-			panic(err)
+			log.
+				WithError(err).
+				WithField("response", bodyToString(response)).
+				Fatal("Failed to update issue")
+			return
 		}
 
 	} else {
@@ -272,7 +276,6 @@ func checkout(repo *git.Repository, issue *jira.Issue) error {
 	}
 
 	if newBranch {
-		fmt.Printf("\nfields: %+v", issue)
 		commitMessage := fmt.Sprintf("%s. %s", issue.Key, issue.Fields.Summary)
 		_, err = repo.CreateCommit("refs/heads/"+issue.Key, signature, signature, commitMessage, tree, headCommit)
 	}
