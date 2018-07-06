@@ -20,8 +20,8 @@ import (
 	"os"
 	"strings"
 
+	git "github.com/libgit2/git2go"
 	"github.com/spf13/cobra"
-	git "gopkg.in/libgit2/git2go.v27"
 )
 
 var tasteCmd = &cobra.Command{
@@ -32,19 +32,19 @@ var tasteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 }
 
-var draft bool
+var wip bool
 var reviewers []string
 
 func init() {
 	RootCmd.AddCommand(tasteCmd)
 
-	tasteCmd.Flags().BoolVarP(&draft, "draft", "d", false, "Setting this flag will post a draft review")
+	tasteCmd.Flags().BoolVar(&wip, "wip", false, "Setting this flag will post a WIP review")
 	tasteCmd.Flags().StringArrayVarP(&reviewers, "reviewers", "r", nil, "Comma separated list of email ids of reviewers to add")
 }
 
 func taste(cmd *cobra.Command, args []string) {
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
-	isDraft, _ := cmd.Flags().GetBool("draft")
+	isWIP, _ := cmd.Flags().GetBool("wip")
 	reviewers, _ := cmd.Flags().GetStringArray("reviewers")
 
 	if dryRun {
@@ -64,13 +64,13 @@ func taste(cmd *cobra.Command, args []string) {
 	defer repo.Free()
 
 	var ref string
-	if isDraft {
-		ref = "drafts"
+	if isWIP {
+		ref = "master%wip"
 	} else {
-		ref = "for"
+		ref = "master"
 	}
 
-	refspec := fmt.Sprintf("HEAD:refs/%s/%s", ref, "master")
+	refspec := fmt.Sprintf("HEAD:refs/for/%s", ref)
 	if len(reviewers) > 0 {
 		refspec = fmt.Sprintf("%s%%r=%s", refspec, strings.Join(reviewers, ",r="))
 	}

@@ -6,14 +6,15 @@ This is a Go port of [beer-review](https://github.com/kunickiaj/beer-review)
 
 [![Build Status](https://travis-ci.org/kunickiaj/beer.svg?branch=master)](https://travis-ci.org/kunickiaj/beer)
 
-# Prerequisites
+## Prerequisites
 
-Requires libgit2 v0.27.0 installed. On macOS `brew install libgit2`.
-# Installation
+Requires libgit2 v0.27 installed. On macOS `brew install libgit2`.
+
+## Installation
 
 `go get -u github.com/kunickiaj/beer`
 
-# Configuration
+## Configuration
 
 By default, `beer` looks for a configuration file at `~/.beer.yaml` but an alternate path can also be specified with the `--config` flag.
 
@@ -28,19 +29,17 @@ gerrit:
   url: https://gerrit.googlesource.com
 ```
 
-# Usage
+## Usage
 
 All help is accessible by specifying the `--help` flag to any beer command/subcommand. `beer --help` will provide an overview of available commands.
 
-## Common Workflow
+### Common Workflow
 
-### Work on a JIRA issue
-
-#### Existing issue
+#### Work on an Existing JIRA issue
 
 `beer brew PRJ-1234` will create a new work branch from issue PRJ-1234 and insert an empty commit with the issue key followed by the issue summary as the commit message. It will also transition the JIRA issue to an In Progress state.
 
-#### New Issue
+#### Work on a New JIRA issue
 
 `beer brew -t Bug -s 'My issue summary' -d 'My detailed issue description` will create a new JIRA issue of type Bug, with the specified summary and detailed description. it will then create a new work branch from the newly created issue with the issue key followed by the issue summary as the commit message. It will also transition the JIRA issue to an In Progress state.
 
@@ -54,7 +53,7 @@ For example: `git commit -a --amend`
 
 ### Create a new review
 
-`beer taste` will push a review to the configured Gerrit server. The `--draft` flag is available if you wish to push a draft/WIP review.
+`beer taste` will push a review to the configured Gerrit server. The `--wip` flag is available if you wish to push a WIP review.
 
 ### Submit a change
 
