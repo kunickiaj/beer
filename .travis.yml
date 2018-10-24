@@ -1,12 +1,11 @@
+# .travis.yml
 language: go
-go:
-  - "1.11.1"
-env:
-  - PKG_CONFIG_PATH=$HOME/libgit2/lib/pkgconfig
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libssh2-1-dev
-  - wget https://github.com/libgit2/libgit2/archive/v0.27.5.tar.gz
-  - tar xf v0.27.5.tar.gz
-  - mkdir -p $HOME/libgit2
-  - pushd libgit2-0.27.5 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/libgit2 && cmake --build . --target install && popd
+
+# calls goreleaser
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = linux
