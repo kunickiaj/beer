@@ -23,10 +23,10 @@ import (
 	"regexp"
 
 	jira "github.com/andygrunwald/go-jira"
-	git "github.com/libgit2/git2go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	git "gopkg.in/libgit2/git2go.v27"
 )
 
 var brewCmd = &cobra.Command{
@@ -73,7 +73,7 @@ func brew(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	repo, err := git.OpenRepository(cwd)
+	repo, err := git.OpenRepositoryExtended(cwd, git.RepositoryOpenFromEnv, "")
 	if err != nil {
 		panic(err)
 	}
