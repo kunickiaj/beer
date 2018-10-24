@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	git "github.com/libgit2/git2go"
+	git "gopkg.in/libgit2/git2go.v27"
 	"github.com/spf13/cobra"
 )
 
