@@ -20,8 +20,9 @@ import (
 	"os"
 	"strings"
 
-	git "gopkg.in/libgit2/git2go.v27"
 	"github.com/spf13/cobra"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 )
 
 var tasteCmd = &cobra.Command{
@@ -56,12 +57,10 @@ func taste(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	repo, err := git.OpenRepository(cwd)
+	repo, err := git.PlainOpenWithOptions(cwd, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		panic(err)
 	}
-
-	defer repo.Free()
 
 	var ref string
 	if isWIP {
@@ -75,32 +74,11 @@ func taste(cmd *cobra.Command, args []string) {
 		refspec = fmt.Sprintf("%s%%r=%s", refspec, strings.Join(reviewers, ",r="))
 	}
 
-	remote, err := repo.Remotes.Lookup("origin")
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{config.RefSpec(refspec)},
+	})
 	if err != nil {
 		panic(err)
 	}
-
-	callbacks := &git.RemoteCallbacks{
-		CredentialsCallback:      credentialsCallback,
-		CertificateCheckCallback: certificateCheckCallback,
-	}
-
-	err = remote.ConnectPush(callbacks, nil, make([]string, 0))
-	if err != nil {
-		panic(err)
-	}
-
-	pushOpts := &git.PushOptions{}
-	refspecs := []string{refspec}
-	err = remote.Push(refspecs, pushOpts)
-
-}
-
-func credentialsCallback(url string, username string, allowedTypes git.CredType) (git.ErrorCode, *git.Cred) {
-	ret, cred := git.NewCredSshKeyFromAgent(username)
-	return git.ErrorCode(ret), &cred
-}
-
-func certificateCheckCallback(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
-	return 0
 }

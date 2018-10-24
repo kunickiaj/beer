@@ -26,7 +26,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	git "gopkg.in/libgit2/git2go.v27"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 var brewCmd = &cobra.Command{
@@ -73,12 +74,10 @@ func brew(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	repo, err := git.OpenRepositoryExtended(cwd, git.RepositoryOpenFromEnv, "")
+	repo, err := git.PlainOpenWithOptions(cwd, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		panic(err)
 	}
-
-	defer repo.Free()
 
 	// Get user struct for logged in user
 	jiraUser, _, err := jiraClient.User.Get(username)
@@ -214,99 +213,43 @@ func bodyToString(res *jira.Response) string {
 }
 
 func checkout(repo *git.Repository, issue *jira.Issue) error {
-	checkoutOpts := &git.CheckoutOpts{
-		Strategy: git.CheckoutSafe | git.CheckoutRecreateMissing | git.CheckoutAllowConflicts | git.CheckoutUseTheirs,
+	checkoutOpts := &git.CheckoutOptions{
+		Branch: plumbing.ReferenceName("refs/heads/" + issue.Key),
 	}
 
-	// Check only for local branches
-	branch, err := repo.LookupBranch(issue.Key, git.BranchLocal)
-	newBranch := false
-	// If it doesn't exist then create it
-	if branch == nil || err != nil {
-		newBranch = true
-
-		head, err := repo.Head()
-		if err != nil {
-			return err
-		}
-
-		headCommit, err := repo.LookupCommit(head.Target())
-		if err != nil {
-			return err
-		}
-
-		branch, err = repo.CreateBranch(issue.Key, headCommit, false)
-		if err != nil {
-			return err
-		}
-	}
-
-	defer branch.Free()
-
-	// Get tree for the branch
-	commit, err := repo.LookupCommit(branch.Target())
+	workTree, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
 
-	defer commit.Free()
-
-	tree, err := repo.LookupTree(commit.TreeId())
-	if err != nil {
-		return err
-	}
-
-	// Checkout the tree
-	err = repo.CheckoutTree(tree, checkoutOpts)
-	if err != nil {
-		return err
-	}
-
-	// Set the head to point to the new branch
-	repo.SetHead("refs/heads/" + issue.Key)
-
-	headCommit, err := repo.LookupCommit(branch.Target())
-	if err != nil {
-		return err
-	}
-
-	signature, err := repo.DefaultSignature()
-	if err != nil {
-		return err
-	}
-
-	if newBranch {
-		commitMessage := fmt.Sprintf("%s. %s", issue.Key, issue.Fields.Summary)
-		_, err = repo.CreateCommit("refs/heads/"+issue.Key, signature, signature, commitMessage, tree, headCommit)
-	}
-	return nil
+	return workTree.Checkout(checkoutOpts)
 }
 
 func getProjectKey(repo *git.Repository) (string, error) {
-	head, err := repo.Head()
+	ref, err := repo.Head()
 	if err != nil {
 		return "", err
 	}
 
-	commit, err := repo.LookupCommit(head.Target())
+	cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return "", err
 	}
 
 	var depth uint
-	for depth < 5 {
+	commit, err := cIter.Next()
+	for depth < 5 && err == nil {
 		re := regexp.MustCompile("^([a-zA-Z]{3,})(-[0-9]+)")
-		message := commit.Message()
+		message := commit.Message
 		match := re.FindStringSubmatch(message)
 		if len(match) == 3 && len(match[1]) > 0 {
 			log.WithField("project_key", match[1]).Info("Inferred project key; override with --project if incorrect")
 			return match[1], nil
 		}
 		depth++
-		commit = commit.Parent(0)
+		commit, err = cIter.Next()
 	}
 
-	defer commit.Free()
 	return "", errors.New("Wasn't able to infer a project key")
 }
 
