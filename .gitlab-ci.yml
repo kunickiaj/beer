@@ -1,0 +1,47 @@
+image: golang:1.11
+
+variables:
+  GOFLAGS: -mod=readonly
+  GOPATH: ${CI_PROJECT_DIR}/vendor/go
+
+.modcache: &modcache
+  key: modcache
+  paths:
+    - vendor/go/pkg/mod/
+    - libgit2
+
+before_script:
+    - export PKG_CONFIG_PATH=${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
+    - apt-get -qq update
+    - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
+    - wget https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz
+    - tar xf v0.27.7.tar.gz
+    - mkdir -p ${CI_PROJECT_DIR}/libgit2
+    - pushd libgit2-0.27.7 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
+
+stages:
+  - dependencies
+  - test
+  - build
+
+dependencies:
+  stage: dependencies
+  script: go mod download
+  cache: *modcache
+
+test:
+  stage: test
+  image: golang:1.11
+  cache:
+    <<: *modcache
+    policy: pull
+  script:
+    - go test ./...
+
+build:
+  stage: build
+  cache:
+    <<: *modcache
+    policy: pull
+  script:
+    - go build

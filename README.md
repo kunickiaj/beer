@@ -4,7 +4,9 @@ CLI for managing your JIRA / Gerrit / git workflow.
 
 This is a Go port of [beer-review](https://github.com/kunickiaj/beer-review)
 
-[![Build Status](https://travis-ci.org/kunickiaj/beer.svg?branch=master)](https://travis-ci.org/kunickiaj/beer)
+[![Build Status](https://gitlab.com/kunickiaj/beer/badges/master/pipeline.svg)](https://gitlab.com/kunickiaj/beer/commits/master)
+
+[![Coverage Report](https://gitlab.com/kunickiaj/beer/badges/master/coverage.svg)](https://gitlab.com/kunickiaj/beer/commits/master)
 
 ## Prerequisites
 
