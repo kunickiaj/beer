@@ -44,3 +44,8 @@ build:
     <<: *modcache
     policy: pull
   script: go build
+  artifacts:
+    paths:
+    - beer
+    expire_in: 1 week
+
