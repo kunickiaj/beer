@@ -3,6 +3,7 @@ image: golang:1.11
 variables:
   GOFLAGS: -mod=readonly
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
+  PKG_CONFIG_PATH: ${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
 
 .modcache: &modcache
   key: modcache
@@ -11,13 +12,8 @@ variables:
     - libgit2
 
 before_script:
-    - export PKG_CONFIG_PATH=${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
-    - apt-get -qq update
-    - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
-    - wget https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz
-    - tar xf v0.27.7.tar.gz
-    - mkdir -p ${CI_PROJECT_DIR}/libgit2
-    - pushd libgit2-0.27.7 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
+  - apt-get -qq update
+  - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
 
 stages:
   - dependencies
@@ -26,6 +22,11 @@ stages:
 
 dependencies:
   stage: dependencies
+  before_script:
+    - wget https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz
+    - tar xf v0.27.7.tar.gz
+    - mkdir -p ${CI_PROJECT_DIR}/libgit2
+    - pushd libgit2-0.27.7 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
   script: go mod download
   cache: *modcache
 
@@ -35,13 +36,11 @@ test:
   cache:
     <<: *modcache
     policy: pull
-  script:
-    - go test ./...
+  script: go test ./...
 
 build:
   stage: build
   cache:
     <<: *modcache
     policy: pull
-  script:
-    - go build
+  script: go build
