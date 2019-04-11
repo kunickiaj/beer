@@ -25,10 +25,10 @@ dependencies:
   before_script:
     - apt-get -qq update
     - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
-    - wget https://github.com/libgit2/libgit2/archive/v0.27.7.tar.gz
-    - tar xf v0.27.7.tar.gz
+    - wget https://github.com/libgit2/libgit2/archive/v0.27.8.tar.gz
+    - tar xf v0.27.8.tar.gz
     - mkdir -p ${CI_PROJECT_DIR}/libgit2
-    - pushd libgit2-0.27.7 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
+    - pushd libgit2-0.27.8 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
 
   script: go mod download
   cache: *modcache
