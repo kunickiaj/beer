@@ -20,8 +20,9 @@ import (
 	"os"
 	"strings"
 
-	git "gopkg.in/libgit2/git2go.v27"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	git "gopkg.in/libgit2/git2go.v27"
 )
 
 var tasteCmd = &cobra.Command{
@@ -39,7 +40,7 @@ func init() {
 	RootCmd.AddCommand(tasteCmd)
 
 	tasteCmd.Flags().BoolVar(&wip, "wip", false, "Setting this flag will post a WIP review")
-	tasteCmd.Flags().StringArrayVarP(&reviewers, "reviewers", "r", nil, "Comma separated list of email ids of reviewers to add")
+	tasteCmd.Flags().StringSliceVarP(&reviewers, "reviewers", "r", nil, "Comma separated list of email ids of reviewers to add")
 }
 
 func taste(cmd *cobra.Command, args []string) {
@@ -74,26 +75,28 @@ func taste(cmd *cobra.Command, args []string) {
 	if len(reviewers) > 0 {
 		refspec = fmt.Sprintf("%s%%r=%s", refspec, strings.Join(reviewers, ",r="))
 	}
+	log.WithField("refspec", refspec).Debug("Using refspec")
 
 	remote, err := repo.Remotes.Lookup("origin")
 	if err != nil {
 		panic(err)
 	}
+	log.WithField("remote", remote).Debug("Discovered remote")
 
-	callbacks := &git.RemoteCallbacks{
-		CredentialsCallback:      credentialsCallback,
-		CertificateCheckCallback: certificateCheckCallback,
+	pushOpts := &git.PushOptions{
+		RemoteCallbacks: git.RemoteCallbacks{
+			CredentialsCallback:      credentialsCallback,
+			CertificateCheckCallback: certificateCheckCallback,
+			SidebandProgressCallback: transportMessageCallback,
+		},
 	}
-
-	err = remote.ConnectPush(callbacks, nil, make([]string, 0))
-	if err != nil {
-		panic(err)
-	}
-
-	pushOpts := &git.PushOptions{}
 	refspecs := []string{refspec}
 	err = remote.Push(refspecs, pushOpts)
-
+	if err != nil {
+		log.WithError(err).Error("Error pushing review")
+		os.Exit(1)
+	}
+	log.Info("Pushed review")
 }
 
 func credentialsCallback(url string, username string, allowedTypes git.CredType) (git.ErrorCode, *git.Cred) {
@@ -102,5 +105,10 @@ func credentialsCallback(url string, username string, allowedTypes git.CredType)
 }
 
 func certificateCheckCallback(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
+	return 0
+}
+
+func transportMessageCallback(str string) git.ErrorCode {
+	fmt.Printf(str)
 	return 0
 }
