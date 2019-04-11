@@ -43,6 +43,8 @@ const docImpactKey = "Doc Impact"
 var description string
 var docImpact bool
 var issueType jiraIssueType
+var components []string
+var labels []string
 var projectKey string
 var summary string
 var testingStatus bool
@@ -56,6 +58,8 @@ func init() {
 	brewCmd.Flags().StringVarP(&description, "description", "d", "", "Issue detailed description. If not specified defaults to summary")
 	brewCmd.Flags().BoolVarP(&docImpact, "doc-impact", "x", false, "When included, sets the Doc Impact field to 'Yes'")
 	brewCmd.Flags().BoolVarP(&testingStatus, "testing-status", "q", false, "When present, indicates extended testing is required.")
+	brewCmd.Flags().StringSliceVarP(&components, "components", "c", nil, "Sets the components field of the issue. Can be a comma separated list.")
+	brewCmd.Flags().StringSliceVarP(&labels, "labels", "l", nil, "Sets the labels field of the issue. Can be a comma separated list.")
 }
 
 func brew(cmd *cobra.Command, args []string) {
@@ -186,6 +190,19 @@ func brew(cmd *cobra.Command, args []string) {
 			return
 		}
 		log.WithField("issue", issue).Debug("Initialized Issue")
+
+		numComponents := len(components)
+		if numComponents > 0 {
+			jiraComponents := make([]*jira.Component, numComponents)
+			for i, v := range components {
+				jiraComponents[i] = &jira.Component{
+					Name: v,
+				}
+			}
+			issue.Fields.Components = jiraComponents
+		}
+
+		issue.Fields.Labels = labels
 
 		var res *jira.Response
 		issue, res, err = jiraClient.Issue.Create(issue)
