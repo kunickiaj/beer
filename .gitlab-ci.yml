@@ -1,4 +1,4 @@
-image: golang:1.11
+image: golang:1.12
 
 variables:
   GOFLAGS: -mod=readonly
@@ -29,13 +29,15 @@ dependencies:
     - tar xf v0.27.8.tar.gz
     - mkdir -p ${CI_PROJECT_DIR}/libgit2
     - pushd libgit2-0.27.8 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
+    - go get -d github.com/libgit2/git2go && pushd $GOPATH/src/github.com/libgit2/git2go
+    - git submodule update --init
+    - make install-static
 
   script: go mod download
   cache: *modcache
 
 test:
   stage: test
-  image: golang:1.11
   cache:
     <<: *modcache
     policy: pull
