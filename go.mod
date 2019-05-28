@@ -6,6 +6,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/libgit2/git2go v0.0.0-20190215132637-bf1e8a433882 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.3.0

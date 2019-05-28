@@ -3,13 +3,12 @@ image: golang:1.12
 variables:
   GOFLAGS: -mod=readonly
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
-  PKG_CONFIG_PATH: ${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
+  # PKG_CONFIG_PATH: ${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
 
 .modcache: &modcache
   key: modcache
   paths:
     - vendor/go/pkg/mod/
-    - libgit2
 
 before_script:
   - apt-get -qq update
@@ -25,17 +24,13 @@ dependencies:
   before_script:
     - apt-get -qq update
     - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
-    # - wget https://github.com/libgit2/libgit2/archive/v0.27.8.tar.gz
-    # - tar xf v0.27.8.tar.gz
-    # - mkdir -p ${CI_PROJECT_DIR}/libgit2
-    # - pushd libgit2-0.27.8 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
-    - go get -v -d github.com/libgit2/git2go
-    - ls -l ${GOPATH}
-    - cd /go/src/github.com/libgit2/git2go
+  script:
+    - go mod download
+    - pushd $GOPATH && go get -v -d github.com/libgit2/git2go && popd
+    - pushd "${GOPATH}/src/github.com/libgit2/git2go"
     - git submodule update --init
     - make install-static
-
-  script: go mod download
+    - popd
   cache: *modcache
 
 test:
