@@ -3,7 +3,7 @@ image: golang:1.12
 variables:
   GOFLAGS: -mod=readonly
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
-  # PKG_CONFIG_PATH: ${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
+  PKG_CONFIG_PATH: /go/src/github.com/libgit2/git2go/vendor/libgit2/build
 
 .modcache: &modcache
   key: modcache
@@ -16,22 +16,28 @@ before_script:
 
 stages:
   - dependencies
+  - git2go
   - test
   - build
 
 dependencies:
   stage: dependencies
+  script:
+    - go mod download
+  cache: *modcache
+
+git2go:
+  stage: dependencies
+  variables:
+    GOPATH: ${CI_PROJECT_DIR}/vendor/go
   before_script:
     - apt-get -qq update
     - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
   script:
-    - go mod download
-    - pushd $GOPATH && go get -v -d github.com/libgit2/git2go && popd
+    - go get -v -d github.com/libgit2/git2go
     - pushd "${GOPATH}/src/github.com/libgit2/git2go"
     - git submodule update --init
     - make install-static
-    - popd
-  cache: *modcache
 
 test:
   stage: test
