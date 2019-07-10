@@ -1,54 +1,16 @@
-image: golang:1.11
-
-variables:
-  GOFLAGS: -mod=readonly
-  GOPATH: ${CI_PROJECT_DIR}/vendor/go
-  PKG_CONFIG_PATH: ${CI_PROJECT_DIR}/libgit2/lib/pkgconfig
-
-.modcache: &modcache
-  key: modcache
-  paths:
-    - vendor/go/pkg/mod/
-    - libgit2
-
-before_script:
-  - apt-get -qq update
-  - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
+image: docker:stable
+services:
+- docker:dind
 
 stages:
-  - dependencies
-  - test
-  - build
+- build
 
-dependencies:
-  stage: dependencies
-  before_script:
-    - apt-get -qq update
-    - apt-get install -y libssh2-1-dev cmake libssl-dev zlib1g-dev libcurl4-openssl-dev
-    - wget https://github.com/libgit2/libgit2/archive/v0.27.8.tar.gz
-    - tar xf v0.27.8.tar.gz
-    - mkdir -p ${CI_PROJECT_DIR}/libgit2
-    - pushd libgit2-0.27.8 && mkdir -p build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/libgit2 && cmake --build . --target install && popd
-
-  script: go mod download
-  cache: *modcache
-
-test:
-  stage: test
-  image: golang:1.11
-  cache:
-    <<: *modcache
-    policy: pull
-  script: go test ./...
+variables:
+  GORELEASER_IMAGE: goreleaser/goreleaser:latest
+  DOCKER_REGISTRY: https://index.docker.io/v1/
 
 build:
   stage: build
-  cache:
-    <<: *modcache
-    policy: pull
-  script: go build
-  artifacts:
-    paths:
-    - beer
-    expire_in: 1 week
-
+  script:
+    - docker pull $GORELEASER_IMAGE
+    - docker run --rm --privileged -v $PWD:/go/src/github.com/kunickiaj/beer -v /var/run/docker.sock:/var/run/docker.sock -w /go/src/github.com/kunickiaj/beer -e GITHUB_TOKEN -e DOCKER_USERNAME -e DOCKER_PASSWORD -e DOCKER_REGISTRY $GORELEASER_IMAGE release --rm-dist
