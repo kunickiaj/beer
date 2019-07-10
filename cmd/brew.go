@@ -49,7 +49,7 @@ const docImpactKey = "Doc Impact"
 
 var description string
 var docImpact bool
-var issueType jiraIssueType
+var issueType string
 var components []string
 var labels []string
 var projectKey string
@@ -60,7 +60,7 @@ func init() {
 	RootCmd.AddCommand(brewCmd)
 
 	brewCmd.Flags().StringVarP(&projectKey, "project", "p", "", "JIRA project key, e.g. SDC, SDCE")
-	brewCmd.Flags().VarP(&issueType, "issue-type", "t", "Issue type to create")
+	brewCmd.Flags().StringVarP(&issueType, "issue-type", "t", "Bug", "Issue type to create, e.g. Bug, 'New Feature', etc. This varies by project.")
 	brewCmd.Flags().StringVarP(&summary, "summary", "s", "", "Issue summary")
 	brewCmd.Flags().StringVarP(&description, "description", "d", "", "Issue detailed description. If not specified defaults to summary")
 	brewCmd.Flags().BoolVarP(&docImpact, "doc-impact", "x", false, "When included, sets the Doc Impact field to 'Yes'")
@@ -153,7 +153,7 @@ func brew(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		metaIssueType, err := createMetaIssueType(metaProject, string(issueType))
+		metaIssueType, err := createMetaIssueType(metaProject, issueType)
 		if err != nil {
 			log.WithField("error", err).Fatal()
 			return
