@@ -20,13 +20,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
+	"path"
 	"regexp"
+	"time"
+
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 
 	jira "github.com/andygrunwald/go-jira"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	git "gopkg.in/libgit2/git2go.v27"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
 
 var brewCmd = &cobra.Command{
@@ -77,12 +84,10 @@ func brew(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	repo, err := git.OpenRepositoryExtended(cwd, git.RepositoryOpenFromEnv, "")
+	repo, err := git.PlainOpenWithOptions(cwd, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		panic(err)
 	}
-
-	defer repo.Free()
 
 	// Get user struct for logged in user
 	jiraUser, _, err := jiraClient.User.Get(username)
@@ -231,100 +236,84 @@ func bodyToString(res *jira.Response) string {
 }
 
 func checkout(repo *git.Repository, issue *jira.Issue) error {
-	checkoutOpts := &git.CheckoutOpts{
-		Strategy: git.CheckoutSafe | git.CheckoutRecreateMissing | git.CheckoutAllowConflicts | git.CheckoutUseTheirs,
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return err
 	}
 
-	// Check only for local branches
-	branch, err := repo.LookupBranch(issue.Key, git.BranchLocal)
+	branch := fmt.Sprintf("refs/heads/%s", issue.Key)
+	b := plumbing.ReferenceName(branch)
+
+	// First try to checkout branch
 	newBranch := false
-	// If it doesn't exist then create it
-	if branch == nil || err != nil {
+	err = workTree.Checkout(&git.CheckoutOptions{Create: false, Force: false, Keep: true, Branch: b})
+	if err != nil {
+		// didn't exist so try to create it
 		newBranch = true
-
-		head, err := repo.Head()
-		if err != nil {
-			return err
-		}
-
-		headCommit, err := repo.LookupCommit(head.Target())
-		if err != nil {
-			return err
-		}
-
-		branch, err = repo.CreateBranch(issue.Key, headCommit, false)
-		if err != nil {
-			return err
-		}
+		err = workTree.Checkout(&git.CheckoutOptions{Create: true, Force: false, Keep: true, Branch: b})
 	}
 
-	defer branch.Free()
-
-	// Get tree for the branch
-	commit, err := repo.LookupCommit(branch.Target())
-	if err != nil {
-		return err
-	}
-
-	defer commit.Free()
-
-	tree, err := repo.LookupTree(commit.TreeId())
-	if err != nil {
-		return err
-	}
-
-	// Checkout the tree
-	err = repo.CheckoutTree(tree, checkoutOpts)
-	if err != nil {
-		return err
-	}
-
-	// Set the head to point to the new branch
-	repo.SetHead("refs/heads/" + issue.Key)
-
-	headCommit, err := repo.LookupCommit(branch.Target())
-	if err != nil {
-		return err
-	}
-
-	signature, err := repo.DefaultSignature()
 	if err != nil {
 		return err
 	}
 
 	if newBranch {
 		commitMessage := fmt.Sprintf("%s. %s", issue.Key, issue.Fields.Summary)
-		_, err = repo.CreateCommit("refs/heads/"+issue.Key, signature, signature, commitMessage, tree, headCommit)
+		usr, err := user.Current()
+		if err != nil {
+			return err
+		}
+		gitConfig, err := os.Open(path.Join(usr.HomeDir, ".gitconfig"))
+		if err != nil {
+			return err
+		}
+		decoder := config.NewDecoder(gitConfig)
+		decodedConfig := config.New()
+		err = decoder.Decode(decodedConfig)
+
+		if err != nil {
+			return err
+		}
+
+		userSection := decodedConfig.Section("user")
+		_, err = workTree.Commit(commitMessage, &git.CommitOptions{
+			Author: &object.Signature{
+				Name:  userSection.Option("name"),
+				Email: userSection.Option("email"),
+				When:  time.Now(),
+			},
+		})
+		return err
 	}
 	return nil
 }
 
 func getProjectKey(repo *git.Repository) (string, error) {
-	head, err := repo.Head()
+	ref, err := repo.Head()
 	if err != nil {
 		return "", err
 	}
 
-	commit, err := repo.LookupCommit(head.Target())
+	cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return "", err
 	}
 
 	var depth uint
-	for depth < 5 {
+	commit, err := cIter.Next()
+	for depth < 5 && err != nil {
 		re := regexp.MustCompile("^([a-zA-Z]{3,})(-[0-9]+)")
-		message := commit.Message()
+		message := commit.Message
 		match := re.FindStringSubmatch(message)
 		if len(match) == 3 && len(match[1]) > 0 {
 			log.WithField("project_key", match[1]).Info("Inferred project key; override with --project if incorrect")
 			return match[1], nil
 		}
 		depth++
-		commit = commit.Parent(0)
+		commit, err = cIter.Next()
 	}
 
-	defer commit.Free()
-	return "", errors.New("Wasn't able to infer a project key")
+	return "", errors.New("wasn't able to infer a project key")
 }
 
 func createMetaProject(jira *jira.Client, projectKey string) (*jira.MetaProject, error) {

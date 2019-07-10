@@ -22,7 +22,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	git "gopkg.in/libgit2/git2go.v27"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 )
 
 var tasteCmd = &cobra.Command{
@@ -57,12 +58,10 @@ func taste(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	repo, err := git.OpenRepository(cwd)
+	repo, err := git.PlainOpenWithOptions(cwd, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		panic(err)
 	}
-
-	defer repo.Free()
 
 	var ref string
 	if isWIP {
@@ -77,38 +76,13 @@ func taste(cmd *cobra.Command, args []string) {
 	}
 	log.WithField("refspec", refspec).Debug("Using refspec")
 
-	remote, err := repo.Remotes.Lookup("origin")
-	if err != nil {
-		panic(err)
-	}
-	log.WithField("remote", remote).Debug("Discovered remote")
-
-	pushOpts := &git.PushOptions{
-		RemoteCallbacks: git.RemoteCallbacks{
-			CredentialsCallback:      credentialsCallback,
-			CertificateCheckCallback: certificateCheckCallback,
-			SidebandProgressCallback: transportMessageCallback,
-		},
-	}
-	refspecs := []string{refspec}
-	err = remote.Push(refspecs, pushOpts)
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{config.RefSpec(refspec)},
+	})
 	if err != nil {
 		log.WithError(err).Error("Error pushing review")
 		os.Exit(1)
 	}
 	log.Info("Pushed review")
-}
-
-func credentialsCallback(url string, username string, allowedTypes git.CredType) (git.ErrorCode, *git.Cred) {
-	ret, cred := git.NewCredSshKeyFromAgent(username)
-	return git.ErrorCode(ret), &cred
-}
-
-func certificateCheckCallback(cert *git.Certificate, valid bool, hostname string) git.ErrorCode {
-	return 0
-}
-
-func transportMessageCallback(str string) git.ErrorCode {
-	fmt.Printf(str)
-	return 0
 }
