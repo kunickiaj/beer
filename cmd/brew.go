@@ -285,7 +285,6 @@ func checkout(repo *git.Repository, issue *jira.Issue) error {
 		})
 		return err
 	}
-	
 	return nil
 }
 
