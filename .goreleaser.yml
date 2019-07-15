@@ -19,6 +19,30 @@ dockers:
   image_templates:
   - 'kunickiaj/beer:{{ .Tag }}'
   - 'kunickiaj/beer:latest'
+brews:
+-
+  name: beer
+
+  # Repository to push the tap to.
+  github:
+    owner: kunickiaj
+    name: homebrew-beer
+
+  url_template: "https://github.com/kunickiaj/beer/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+  commit_author:
+    name: goreleaserbot
+    email: kunickiaj@gmail.com
+
+  folder: Formula
+
+  homepage: "https://github.com/kunickiaj/beer"
+  description: "CLI for managing your JIRA / Gerrit / git workflow."
+
+  skip_upload: auto
+
+  test: |
+    system "#{bin}/beer --help"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
