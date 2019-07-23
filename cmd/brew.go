@@ -16,7 +16,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -29,6 +28,7 @@ import (
 
 	jira "github.com/andygrunwald/go-jira"
 	log "github.com/sirupsen/logrus"
+  "github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/src-d/go-git.v4"
@@ -291,19 +291,23 @@ func checkout(repo *git.Repository, issue *jira.Issue) error {
 func getProjectKey(repo *git.Repository) (string, error) {
 	ref, err := repo.Head()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "couldn't get HEAD reference when searching for project key")
 	}
 
 	cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, fmt.Sprintf("couldn't get git log from hash '%s'", ref.Hash().String()))
 	}
 
 	var depth uint
 	commit, err := cIter.Next()
-	for depth < 5 && err != nil {
+	for depth < 5 {
+		if err != nil {
+			return "", errors.Wrap(err, "log iterator had no next commit")
+		}
 		re := regexp.MustCompile("^([a-zA-Z]{3,})(-[0-9]+)")
 		message := commit.Message
+		log.WithField("message", commit.Message).Debug("Searching commit message...")
 		match := re.FindStringSubmatch(message)
 		if len(match) == 3 && len(match[1]) > 0 {
 			log.WithField("project_key", match[1]).Info("Inferred project key; override with --project if incorrect")
@@ -313,7 +317,7 @@ func getProjectKey(repo *git.Repository) (string, error) {
 		commit, err = cIter.Next()
 	}
 
-	return "", errors.New("wasn't able to infer a project key")
+	return "", errors.Wrap(err, "wasn't able to infer a project key")
 }
 
 func createMetaProject(jira *jira.Client, projectKey string) (*jira.MetaProject, error) {
