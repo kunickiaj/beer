@@ -10,11 +10,13 @@ This is a Go port of [beer-review](https://github.com/kunickiaj/beer-review)
 
 ## Prerequisites
 
-Requires libgit2 v0.27 installed. On macOS `brew install libgit2`.
+None
 
 ## Installation
 
 `go get -u github.com/kunickiaj/beer`
+or with Homebrew
+`brew install kunickiaj/beer/beer`
 
 ## Configuration
 
