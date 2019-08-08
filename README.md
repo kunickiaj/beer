@@ -15,7 +15,9 @@ None
 ## Installation
 
 `go get -u github.com/kunickiaj/beer`
+
 or with Homebrew
+
 `brew install kunickiaj/beer/beer`
 
 ## Configuration
