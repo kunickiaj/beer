@@ -258,7 +258,13 @@ func checkout(repo *git.Repository, issue *jira.Issue) error {
 	}
 
 	if newBranch {
-		commitMessage := fmt.Sprintf("%s. %s", issue.Key, issue.Fields.Summary)
+		// If an issue description was provided, that isn't simply a repeat of the summary, we'll automatically include
+		// it in the commit message after the break.
+		extendedDescription := ""
+		if issue.Fields.Summary != issue.Fields.Description {
+			extendedDescription = fmt.Sprintf("\n\n%s", issue.Fields.Description)
+		}
+		commitMessage := fmt.Sprintf("%s. %s%s", issue.Key, issue.Fields.Summary, extendedDescription)
 		usr, err := user.Current()
 		if err != nil {
 			return err
