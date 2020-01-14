@@ -16,3 +16,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529 // indirect
 	gopkg.in/src-d/go-git.v4 v4.12.0
 )
+
+go 1.13
