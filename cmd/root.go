@@ -31,10 +31,13 @@ var (
 	gerritConfig GerritConfig
 )
 
+var version string // set at build time
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "beer",
-	Short: "CLI for managing your JIRA / Gerrit / git workflow.",
+	Use:     "beer",
+	Version: version,
+	Short:   "CLI for managing your JIRA / Gerrit / git workflow.",
 	Long: `Beer Review is a CLI for managing your JIRA <--> Gerrit workflow.
 
 It can be used to create new tickets, work on existing ones, and submit reviews.

@@ -4,6 +4,15 @@ before:
 builds:
 - env:
   - CGO_ENABLED=0
+  ldflags:
+    - -s -w -X github.com/kunickiaj/beer/cmd.version={{.Version}}
+  goos:
+    - darwin
+    - linux
+  goarch:
+    - amd64
+    - arm
+    - arm64
 archives:
   - id: dist
     replacements:
