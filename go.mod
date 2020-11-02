@@ -4,6 +4,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/andygrunwald/go-jira v1.6.0
 	github.com/fatih/structs v1.1.0 // indirect
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
@@ -13,8 +14,6 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.1
 	github.com/trivago/tgo v1.0.5 // indirect
-	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529 // indirect
-	gopkg.in/src-d/go-git.v4 v4.12.0
 )
 
 go 1.13
