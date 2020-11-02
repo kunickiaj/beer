@@ -34,7 +34,7 @@ brews:
   name: beer
 
   # Repository to push the tap to.
-  github:
+  tap:
     owner: kunickiaj
     name: homebrew-beer
 

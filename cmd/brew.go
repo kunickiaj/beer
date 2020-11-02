@@ -22,18 +22,19 @@ import (
 	"os/user"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/format/config"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/config"
 )
 
 var brewCmd = &cobra.Command{
@@ -44,8 +45,15 @@ var brewCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 }
 
-const testingStatusKey = "Testing Status"
-const docImpactKey = "Doc Impact"
+type FileType struct {
+	Name      string
+	Extension string
+}
+
+const (
+	testingStatusKey = "Testing Status"
+	docImpactKey     = "Doc Impact"
+)
 
 var description string
 var docImpact bool
@@ -55,6 +63,7 @@ var labels []string
 var projectKey string
 var summary string
 var testingStatus bool
+var autoMetadata bool
 
 func init() {
 	RootCmd.AddCommand(brewCmd)
@@ -67,6 +76,7 @@ func init() {
 	brewCmd.Flags().BoolVarP(&testingStatus, "testing-status", "q", false, "When present, indicates extended testing is required.")
 	brewCmd.Flags().StringSliceVarP(&components, "components", "c", nil, "Sets the components field of the issue. Can be a comma separated list.")
 	brewCmd.Flags().StringSliceVarP(&labels, "labels", "l", nil, "Sets the labels field of the issue. Can be a comma separated list.")
+	brewCmd.Flags().BoolVarP(&autoMetadata, "auto", "a", false, "Enable automatic metadata detection for components and/or labels.")
 }
 
 func brew(cmd *cobra.Command, args []string) {
@@ -209,6 +219,9 @@ func brew(cmd *cobra.Command, args []string) {
 
 		issue.Fields.Labels = labels
 
+
+		issue = appendAutomaticMetadata(repo, issue)
+
 		var res *jira.Response
 		issue, res, err = jiraClient.Issue.Create(issue)
 		if err != nil {
@@ -227,6 +240,54 @@ func brew(cmd *cobra.Command, args []string) {
 		log.WithField("error", err).Fatal()
 		return
 	}
+}
+
+func appendAutomaticMetadata(repo *git.Repository, issue *jira.Issue) *jira.Issue {
+	if !autoMetadata {
+		return issue
+	}
+
+	w, _ := repo.Worktree()
+	files, err := w.Filesystem.ReadDir(".")
+	if err != nil {
+		log.WithError(err).Warn("metadata inference failed")
+		return issue
+	}
+
+	terraformType := FileType{
+		Name:      "Terraform",
+		Extension: ".tf",
+	}
+	if containsFileType(files, terraformType) {
+		component := &jira.Component{
+			Name: terraformType.Name,
+		}
+		issue.Fields.Components = append(issue.Fields.Components, component)
+	}
+
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		log.WithError(err).Warn("metadata inference failed")
+		return issue
+	}
+
+
+	repoName := strings.TrimSuffix(path.Base(remote.Config().URLs[0]), ".git")
+	repoComponent := &jira.Component{
+		Name: repoName,
+	}
+
+	issue.Fields.Components = append(issue.Fields.Components, repoComponent)
+	return issue
+}
+
+func containsFileType(files []os.FileInfo, fileType FileType) bool {
+	for _, f := range files {
+		if !f.IsDir() && strings.HasSuffix(f.Name(), fileType.Extension) {
+			return true
+		}
+	}
+	return false
 }
 
 func bodyToString(res *jira.Response) string {
