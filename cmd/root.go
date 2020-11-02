@@ -70,10 +70,10 @@ func init() {
 	RootCmd.PersistentFlags().String("jira-password", "", "JIRA password")
 	RootCmd.PersistentFlags().String("gerrit-url", "", "Gerrit SSH URL")
 
-	viper.BindPFlag("jira.url", RootCmd.PersistentFlags().Lookup("jira-url"))
-	viper.BindPFlag("jira.username", RootCmd.PersistentFlags().Lookup("jira-username"))
-	viper.BindPFlag("jira.password", RootCmd.PersistentFlags().Lookup("jira-password"))
-	viper.BindPFlag("gerrit.url", RootCmd.PersistentFlags().Lookup("gerrit-url"))
+	_ = viper.BindPFlag("jira.url", RootCmd.PersistentFlags().Lookup("jira-url"))
+	_ = viper.BindPFlag("jira.username", RootCmd.PersistentFlags().Lookup("jira-username"))
+	_ = viper.BindPFlag("jira.password", RootCmd.PersistentFlags().Lookup("jira-password"))
+	_ = viper.BindPFlag("gerrit.url", RootCmd.PersistentFlags().Lookup("gerrit-url"))
 }
 
 // initConfig reads in config file and ENV variables if set.

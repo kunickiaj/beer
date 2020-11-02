@@ -27,8 +27,8 @@ dockers:
   binaries:
   - beer
   image_templates:
-  - 'kunickiaj/beer:{{ .Tag }}'
-  - 'kunickiaj/beer:latest'
+  - 'ghcr.io/kunickiaj/beer:{{ .Tag }}'
+  - 'ghcr.io/kunickiaj/beer:latest'
 brews:
 -
   name: beer

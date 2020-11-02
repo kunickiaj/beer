@@ -27,8 +27,8 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 
 	jira "github.com/andygrunwald/go-jira"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-  "github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/src-d/go-git.v4"
@@ -77,7 +77,7 @@ func brew(cmd *cobra.Command, args []string) {
 	jiraURL := viper.GetString("jira.url")
 
 	jiraClient, _ := jira.NewClient(nil, jiraURL)
-	jiraClient.Authentication.SetBasicAuth(username, password)
+	jiraClient.Authentication.SetBasicAuth(username, password) // nolint:staticcheck
 
 	cwd, err := os.Getwd()
 	if err != nil {
