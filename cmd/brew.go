@@ -28,13 +28,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 
 	jira "github.com/andygrunwald/go-jira"
-	log "github.com/sirupsen/logrus"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/format/config"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var brewCmd = &cobra.Command{
@@ -82,12 +81,11 @@ func init() {
 func brew(cmd *cobra.Command, args []string) {
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 
-	username := viper.GetString("jira.username")
-	password := viper.GetString("jira.password")
-	jiraURL := viper.GetString("jira.url")
-
-	jiraClient, _ := jira.NewClient(nil, jiraURL)
-	jiraClient.Authentication.SetBasicAuth(username, password) // nolint:staticcheck
+	transport := jira.BasicAuthTransport{
+		Username:  jiraConfig.Username,
+		Password:  jiraConfig.Password,
+	}
+	jiraClient, _ := jira.NewClient(transport.Client(), jiraConfig.URL)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -100,7 +98,7 @@ func brew(cmd *cobra.Command, args []string) {
 	}
 
 	// Get user struct for logged in user
-	jiraUser, _, err := jiraClient.User.Get(username)
+	jiraUser, _, err := jiraClient.User.GetSelf()
 	if err != nil {
 		panic(err)
 	}
@@ -171,10 +169,10 @@ func brew(cmd *cobra.Command, args []string) {
 
 		fieldsConfig := map[string]string{
 			"Project":     projectKey,
-			"Issue Type":  string(issueType),
+			"Issue Type":  issueType,
 			"Summary":     summary,
 			"Description": description,
-			"Assignee":    jiraUser.Key,
+			"Assignee":    jiraUser.AccountID,
 		}
 
 		fields, err := metaIssueType.GetAllFields()

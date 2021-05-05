@@ -16,12 +16,18 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"os"
+	"strings"
+	"syscall"
 
+	"github.com/99designs/keyring"
 	homedir "github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 var (
@@ -115,4 +121,40 @@ func initConfig() {
 	if err := viper.UnmarshalKey("gerrit", &gerritConfig); err == nil {
 		log.WithField("gerrit_url", gerritConfig.URL).Debug("Parse Gerrit config")
 	}
+
+	// last step, check os keychain for credentials
+	ring, _ := keyring.Open(keyring.Config{
+		ServiceName: "beer-review",
+	})
+
+	// if users have existing config files with a password, let's inform them to migrate their config
+	if len(jiraConfig.Password) > 0 {
+		log.Warn("Plaintext password detected in beer config, please remove it from the file.")
+		log.Warn("You will be prompted for your password so that it can be stored securely in your OS keychain instead.")
+	}
+
+	i, err := ring.Get("jira-password")
+	if errors.Is(err, keyring.ErrKeyNotFound) {
+		password, _ := credentials()
+		i = keyring.Item{
+			Key: "jira-password",
+			Data: []byte(password),
+		}
+		_ = ring.Set(i)
+	} else if err != nil {
+		log.WithError(err).Fatal("Unable to access keychain")
+	}
+
+	jiraConfig.Password = string(i.Data)
+}
+
+func credentials() (string, error) {
+	fmt.Print("Enter Jira Password or API token: ")
+	bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return "", err
+	}
+
+	password := string(bytePassword)
+	return strings.TrimSpace(password), nil
 }

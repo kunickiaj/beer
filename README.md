@@ -28,7 +28,7 @@ The file is YAML containing two sections (mappings) with configuration for JIRA 
 
 ```yaml
 jira:
-  url: https://issues.apache.org
+  url: https://issues.apache.org/jira
   username: alice
   password: Password123!
 gerrit:
