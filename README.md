@@ -4,9 +4,9 @@ CLI for managing your JIRA / Gerrit / git workflow.
 
 This is a Go port of [beer-review](https://github.com/kunickiaj/beer-review)
 
-[![Build Status](https://gitlab.com/kunickiaj/beer/badges/master/pipeline.svg)](https://gitlab.com/kunickiaj/beer/commits/master)
-
-[![Coverage Report](https://gitlab.com/kunickiaj/beer/badges/master/coverage.svg)](https://gitlab.com/kunickiaj/beer/commits/master)
+![Release Status](https://github.com/kunickiaj/beer/actions/workflows/release.yaml/badge.svg)
+![CI Status](https://github.com/kunickiaj/beer/actions/workflows/pr.yaml/badge.svg)
+![CodeQL Status](https://github.com/kunickiaj/beer/actions/workflows/codeql-analysis.yml/badge.svg)
 
 ## Prerequisites
 
