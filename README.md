@@ -30,7 +30,6 @@ The file is YAML containing two sections (mappings) with configuration for JIRA 
 jira:
   url: https://issues.apache.org/jira
   username: alice
-  password: Password123!
 gerrit:
   url: https://gerrit.googlesource.com
 ```
