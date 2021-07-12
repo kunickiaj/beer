@@ -32,6 +32,10 @@ jira:
   username: alice
 gerrit:
   url: https://gerrit.googlesource.com
+# optional section, you can specify persistent defaults for some flags
+defaults:
+  # beer will use 'trunk' for creating reviews instead of the default of 'main' 
+  branch: trunk
 ```
 
 ## Usage

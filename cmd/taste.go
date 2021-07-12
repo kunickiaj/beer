@@ -17,13 +17,14 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 var tasteCmd = &cobra.Command{
@@ -42,11 +43,16 @@ func init() {
 
 	tasteCmd.Flags().BoolVar(&wip, "wip", false, "Setting this flag will post a WIP review")
 	tasteCmd.Flags().StringSliceVarP(&reviewers, "reviewers", "r", nil, "Comma separated list of email ids of reviewers to add")
+	tasteCmd.Flags().String("branch", "main", "Target branch for review")
+
+	_ = viper.BindPFlag("defaults.branch", tasteCmd.Flags().Lookup("branch"))
 }
 
 func taste(cmd *cobra.Command, args []string) {
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 	isWIP, _ := cmd.Flags().GetBool("wip")
+	targetBranch := viper.GetString("defaults.branch")
+	log.WithField("targetBranch", targetBranch).Debug("Determined target branch for comparison")
 	reviewers, _ := cmd.Flags().GetStringArray("reviewers")
 
 	if dryRun {
@@ -65,9 +71,9 @@ func taste(cmd *cobra.Command, args []string) {
 
 	var ref string
 	if isWIP {
-		ref = "master%wip"
+		ref = fmt.Sprintf("%s%%wip", targetBranch)
 	} else {
-		ref = "master"
+		ref = targetBranch
 	}
 
 	refspec := fmt.Sprintf("HEAD:refs/for/%s", ref)
