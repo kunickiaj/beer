@@ -24,7 +24,7 @@ dockers:
 -
   goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - beer
   image_templates:
   - 'ghcr.io/kunickiaj/beer:{{ .Tag }}'
@@ -53,6 +53,9 @@ brews:
 
   test: |
     system "#{bin}/beer --help"
+
+  install: |
+      bin.install "beer"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
