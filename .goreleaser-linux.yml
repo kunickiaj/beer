@@ -1,0 +1,62 @@
+before:
+  hooks:
+  - go mod download
+builds:
+- env:
+  - CGO_ENABLED=1
+  ldflags:
+    - -s -w -X github.com/kunickiaj/beer/cmd.version={{.Version}}
+  goos:
+    - linux
+  goarch:
+    - amd64
+archives:
+  - id: dist
+    replacements:
+      linux: Linux
+dockers:
+-
+  goos: linux
+  goarch: amd64
+  ids:
+  - beer
+  image_templates:
+  - 'ghcr.io/kunickiaj/beer:{{ .Tag }}'
+  - 'ghcr.io/kunickiaj/beer:latest'
+brews:
+-
+  name: beer
+
+  # Repository to push the tap to.
+  tap:
+    owner: kunickiaj
+    name: homebrew-beer
+
+  url_template: "https://github.com/kunickiaj/beer/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+  commit_author:
+    name: goreleaserbot
+    email: kunickiaj@gmail.com
+
+  folder: Formula
+
+  homepage: "https://github.com/kunickiaj/beer"
+  description: "CLI for managing your JIRA / Gerrit / git workflow."
+
+  skip_upload: auto
+
+  test: |
+    system "#{bin}/beer --help"
+
+  install: |
+      bin.install "beer"
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
