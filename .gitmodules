@@ -1,0 +1,3 @@
+[submodule "golang-cross-sysroot"]
+	path = sysroot
+	url = git@github.com:kunickiaj/golang-cross-sysroot.git
