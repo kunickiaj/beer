@@ -36,6 +36,7 @@ release:
 		--privileged \
 		-e CGO_ENABLED=1 \
 		--env-file .release-env \
+		-v $(HOME)/.docker:/root/.docker \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-v `pwd`/sysroot:/sysroot \
