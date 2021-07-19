@@ -124,7 +124,7 @@ func initConfig() {
 
 	// last step, check os keychain for credentials
 	ring, _ := keyring.Open(keyring.Config{
-		ServiceName: "beer-review",
+		ServiceName: "beer", // ref: https://github.com/99designs/keyring/issues/44
 	})
 
 	// if users have existing config files with a password, let's inform them to migrate their config
