@@ -6,7 +6,7 @@ SYSROOT_ARCHIVE ?= sysroots.tar.bz2
 
 .PHONY: sysroot-pack
 sysroot-pack:
-	@tar cjf $(SYSROOT_ARCHIVE) $(SYSROOT_DIR)
+	@tar cf - $(SYSROOT_DIR) -P | pv -s $[$(du -sk $(SYSROOT_DIR) | awk '{print $1}') * 1024] | pbzip2 > $(SYSROOT_ARCHIVE)
 
 .PHONY: sysroot-unpack
 sysroot-unpack:
