@@ -12,8 +12,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           submodules: 'true'
-      - run: git fetch --prune --unshallow
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
