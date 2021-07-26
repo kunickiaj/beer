@@ -172,7 +172,7 @@ func brew(cmd *cobra.Command, args []string) {
 			"Issue Type":  issueType,
 			"Summary":     summary,
 			"Description": description,
-			"Assignee":    jiraUser.AccountID,
+			"Assignee":    assignee(jiraUser),
 		}
 
 		fields, err := metaIssueType.GetAllFields()
@@ -237,6 +237,14 @@ func brew(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.WithField("error", err).Fatal()
 		return
+	}
+}
+
+func assignee(jiraUser *jira.User) string {
+	if len(jiraUser.AccountID) > 0 {
+		return jiraUser.AccountID
+	} else {
+		return jiraUser.Name
 	}
 }
 
