@@ -23,7 +23,7 @@ import (
 	"syscall"
 
 	"github.com/99designs/keyring"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,8 +33,7 @@ import (
 var (
 	debugMode    bool
 	cfgFile      string
-	jiraConfig   JiraConfig
-	gerritConfig GerritConfig
+	config Config
 )
 
 var version string // set at build time
@@ -75,11 +74,13 @@ func init() {
 	RootCmd.PersistentFlags().String("jira-username", "", "JIRA username")
 	RootCmd.PersistentFlags().String("jira-password", "", "JIRA password")
 	RootCmd.PersistentFlags().String("gerrit-url", "", "Gerrit SSH URL")
+	RootCmd.PersistentFlags().String("review-tool", "gerrit", "Tool for publishing reviews, e.g. Gerrit")
 
 	_ = viper.BindPFlag("jira.url", RootCmd.PersistentFlags().Lookup("jira-url"))
 	_ = viper.BindPFlag("jira.username", RootCmd.PersistentFlags().Lookup("jira-username"))
 	_ = viper.BindPFlag("jira.password", RootCmd.PersistentFlags().Lookup("jira-password"))
 	_ = viper.BindPFlag("gerrit.url", RootCmd.PersistentFlags().Lookup("gerrit-url"))
+	_ = viper.BindPFlag("reviewTool", RootCmd.PersistentFlags().Lookup("review-tool"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -114,12 +115,8 @@ func initConfig() {
 
 	log.WithField("config_keys", viper.AllKeys()).Debug("Configuration keys")
 
-	if err := viper.UnmarshalKey("jira", &jiraConfig); err == nil {
-		log.WithField("jira_url", jiraConfig.URL).Debug("Parsed JIRA config")
-	}
-
-	if err := viper.UnmarshalKey("gerrit", &gerritConfig); err == nil {
-		log.WithField("gerrit_url", gerritConfig.URL).Debug("Parse Gerrit config")
+	if err := viper.Unmarshal(&config); err == nil {
+		log.WithField("config", config).Debug("Parsed config")
 	}
 
 	// last step, check os keychain for credentials
@@ -128,7 +125,7 @@ func initConfig() {
 	})
 
 	// if users have existing config files with a password, let's inform them to migrate their config
-	if len(jiraConfig.Password) > 0 {
+	if len(config.Jira.Password) > 0 {
 		log.Warn("Plaintext password detected in beer config, please remove it from the file.")
 		log.Warn("You will be prompted for your password so that it can be stored securely in your OS keychain instead.")
 	}
@@ -145,7 +142,7 @@ func initConfig() {
 		log.WithError(err).Fatal("Unable to access keychain")
 	}
 
-	jiraConfig.Password = string(i.Data)
+	config.Jira.Password = string(i.Data)
 }
 
 func credentials() (string, error) {

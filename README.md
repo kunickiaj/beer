@@ -27,11 +27,12 @@ By default, `beer` looks for a configuration file at `~/.beer.yaml` but an alter
 The file is YAML containing two sections (mappings) with configuration for JIRA and Gerrit. An example is provided below.
 
 ```yaml
+reviewTool: gerrit
 jira:
   url: https://issues.apache.org/jira
   username: alice
 gerrit:
-  url: https://gerrit.googlesource.com
+  url: https://gerrit.googlesource.com # (optional, currently unused)
 # optional section, you can specify persistent defaults for some flags
 defaults:
   # beer will use 'trunk' for creating reviews instead of the default of 'main' 

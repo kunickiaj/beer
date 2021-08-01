@@ -16,13 +16,9 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
+	"github.com/kunickiaj/beer/pkg/review"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -53,42 +49,30 @@ func taste(cmd *cobra.Command, args []string) {
 	isWIP, _ := cmd.Flags().GetBool("wip")
 	targetBranch := viper.GetString("defaults.branch")
 	log.WithField("targetBranch", targetBranch).Debug("Determined target branch for comparison")
-	reviewers, _ := cmd.Flags().GetStringArray("reviewers")
+	reviewers, err := cmd.Flags().GetStringSlice("reviewers")
+
+	if err != nil {
+		log.WithError(err).Fatal("Could not parse reviewers")
+	}
+
+	log.WithField("reviewers", reviewers).Debug("Parsed reviewers")
+
+	var r review.Review
+	switch config.ReviewTool.Normalize() {
+	case Gerrit:
+		r = review.NewGerritReview("title", "description", reviewers, targetBranch, isWIP)
+	case GitHub:
+		fallthrough
+	default:
+		log.WithField("reviewTool", config.ReviewTool).Fatal("This review tool is not yet supported")
+	}
 
 	if dryRun {
 		return
 	}
 
-	cwd, err := os.Getwd()
+	err = r.Publish()
 	if err != nil {
-		panic(err)
+		log.WithError(err).Error("Failed to publish review")
 	}
-
-	repo, err := git.PlainOpenWithOptions(cwd, &git.PlainOpenOptions{DetectDotGit: true})
-	if err != nil {
-		panic(err)
-	}
-
-	var ref string
-	if isWIP {
-		ref = fmt.Sprintf("%s%%wip", targetBranch)
-	} else {
-		ref = targetBranch
-	}
-
-	refspec := fmt.Sprintf("HEAD:refs/for/%s", ref)
-	if len(reviewers) > 0 {
-		refspec = fmt.Sprintf("%s%%r=%s", refspec, strings.Join(reviewers, ",r="))
-	}
-	log.WithField("refspec", refspec).Debug("Using refspec")
-
-	err = repo.Push(&git.PushOptions{
-		RemoteName: "origin",
-		RefSpecs:   []config.RefSpec{config.RefSpec(refspec)},
-	})
-	if err != nil {
-		log.WithError(err).Error("Error pushing review")
-		os.Exit(1)
-	}
-	log.Info("Pushed review")
 }

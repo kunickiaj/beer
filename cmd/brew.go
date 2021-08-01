@@ -30,7 +30,7 @@ import (
 	jira "github.com/andygrunwald/go-jira"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/format/config"
+	gogitConfig "github.com/go-git/go-git/v5/plumbing/format/config"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -82,10 +82,10 @@ func brew(cmd *cobra.Command, args []string) {
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 
 	transport := jira.BasicAuthTransport{
-		Username:  jiraConfig.Username,
-		Password:  jiraConfig.Password,
+		Username:  config.Jira.Username,
+		Password:  config.Jira.Password,
 	}
-	jiraClient, _ := jira.NewClient(transport.Client(), jiraConfig.URL)
+	jiraClient, _ := jira.NewClient(transport.Client(), config.Jira.URL)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -340,8 +340,8 @@ func checkout(repo *git.Repository, issue *jira.Issue) error {
 		if err != nil {
 			return err
 		}
-		decoder := config.NewDecoder(gitConfig)
-		decodedConfig := config.New()
+		decoder := gogitConfig.NewDecoder(gitConfig)
+		decodedConfig := gogitConfig.New()
 		err = decoder.Decode(decodedConfig)
 
 		if err != nil {
