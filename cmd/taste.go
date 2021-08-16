@@ -62,7 +62,7 @@ func taste(cmd *cobra.Command, args []string) {
 	case Gerrit:
 		r = review.NewGerritReview("title", "description", reviewers, targetBranch, isWIP)
 	case GitHub:
-		fallthrough
+		r = review.NewGitHubReview("title", "description", reviewers, targetBranch, isWIP)
 	default:
 		log.WithField("reviewTool", config.ReviewTool).Fatal("This review tool is not yet supported")
 	}

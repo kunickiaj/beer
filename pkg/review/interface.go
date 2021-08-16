@@ -12,3 +12,9 @@ type Meta struct {
 	BaseBranch  string   // The branch to merge into
 	IsDraft     bool     // Is this a draft request?
 }
+
+type NotImplementedError struct{}
+
+func (e *NotImplementedError) Error() string {
+	return "Functionality not yet implemented"
+}
