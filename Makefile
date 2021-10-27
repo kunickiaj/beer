@@ -1,5 +1,5 @@
 PACKAGE_NAME          := github.com/kunickiaj/beer
-GOLANG_CROSS_VERSION  ?= v1.16.5
+GOLANG_CROSS_VERSION  ?= v1.16.7
 
 SYSROOT_DIR     ?= sysroots
 SYSROOT_ARCHIVE ?= sysroots.tar.bz2
