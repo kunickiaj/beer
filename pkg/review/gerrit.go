@@ -64,5 +64,5 @@ func (g GerritReview) Publish() error {
 }
 
 func (g GerritReview) Merge() error {
-	return nil
+	return &NotImplementedError{}
 }
