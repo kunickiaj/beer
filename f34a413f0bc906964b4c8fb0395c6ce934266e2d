@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d48c24ef_c43a4693",
+        "filename": "pkg/review/gerrit.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1006239
+      },
+      "writtenOn": "2021-11-19T18:59:10Z",
+      "side": 1,
+      "message": "review comment",
+      "revId": "f34a413f0bc906964b4c8fb0395c6ce934266e2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
