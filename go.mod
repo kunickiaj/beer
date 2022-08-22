@@ -2,7 +2,7 @@ module github.com/kunickiaj/beer
 
 require (
 	github.com/99designs/keyring v1.2.1
-	github.com/andygrunwald/go-jira v1.15.1
+	github.com/andygrunwald/go-jira v1.16.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
