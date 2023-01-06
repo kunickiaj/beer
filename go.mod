@@ -1,7 +1,7 @@
 module github.com/kunickiaj/beer
 
 require (
-	github.com/99designs/keyring v1.2.1
+	github.com/99designs/keyring v1.2.2
 	github.com/andygrunwald/go-jira v1.16.0
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/go-git/go-git/v5 v5.5.2
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.12.0
 	github.com/subosito/gotenv v1.4.1 // indirect
-	golang.org/x/term v0.2.0
+	golang.org/x/term v0.3.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
