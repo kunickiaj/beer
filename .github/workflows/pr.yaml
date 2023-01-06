@@ -11,9 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.1.0
+        uses: golangci/golangci-lint-action@v3.3.1
         with:
-          version: v1.32
+          version: v1.50.1
   build:
     name: build
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: ^1.19
         id: go
 
       - name: Check out code into the Go module directory
