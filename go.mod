@@ -10,7 +10,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
-	github.com/spf13/viper v1.14.0
+	github.com/spf13/viper v1.15.0
 	golang.org/x/term v0.4.0
 )
 
