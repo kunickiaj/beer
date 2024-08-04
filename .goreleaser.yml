@@ -48,14 +48,17 @@ archives:
       - darwin-amd64
       - darwin-arm64
       - linux-amd64
-    replacements:
-      darwin: macOS
-      linux: Linux
-      amd64: x86_64
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end -}}
 brews:
   - name: beer
     # Repository to push the tap to.
-    tap:
+    repository:
       owner: kunickiaj
       name: homebrew-beer
 
@@ -65,7 +68,7 @@ brews:
       name: goreleaserbot
       email: kunickiaj@gmail.com
 
-    folder: Formula
+    directory: Formula
 
     homepage: 'https://github.com/kunickiaj/beer'
     description: 'CLI for managing your JIRA / Gerrit / git workflow.'

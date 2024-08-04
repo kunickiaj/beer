@@ -1,5 +1,5 @@
 PACKAGE_NAME          := github.com/kunickiaj/beer
-GOLANG_CROSS_VERSION  ?= v1.20.1
+GOLANG_CROSS_VERSION  ?= v1.21.12
 
 SYSROOT_DIR     ?= sysroots
 SYSROOT_ARCHIVE ?= sysroots.tar.bz2
@@ -23,7 +23,7 @@ release-dry-run:
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
-		--rm-dist --skip-validate --skip-publish
+		--clean --skip=validate --skip=publish
 
 .PHONY: release
 release:
