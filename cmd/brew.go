@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/user"
 	"path"
@@ -297,7 +297,7 @@ func containsFileType(files []os.FileInfo, fileType FileType) bool {
 }
 
 func bodyToString(res *jira.Response) string {
-	bytes, _ := ioutil.ReadAll(res.Body)
+	bytes, _ := io.ReadAll(res.Body)
 	bodyStr := string(bytes)
 	return bodyStr
 }
