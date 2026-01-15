@@ -1,3 +1,5 @@
+version: 2
+
 before:
   hooks:
     - go mod download
@@ -44,7 +46,7 @@ builds:
       - amd64
 archives:
   - id: dist
-    builds:
+    ids:
       - darwin-amd64
       - darwin-arm64
       - linux-amd64
@@ -55,43 +57,50 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
-brews:
+homebrew_casks:
   - name: beer
     # Repository to push the tap to.
     repository:
       owner: kunickiaj
       name: homebrew-beer
 
-    url_template: 'https://github.com/kunickiaj/beer/releases/download/{{ .Tag }}/{{ .ArtifactName }}'
+    url:
+      template: 'https://github.com/kunickiaj/beer/releases/download/{{ .Tag }}/{{ .ArtifactName }}'
+      verified: 'github.com/kunickiaj/beer'
 
     commit_author:
       name: goreleaserbot
       email: kunickiaj@gmail.com
-
-    directory: Formula
 
     homepage: 'https://github.com/kunickiaj/beer'
     description: 'CLI for managing your JIRA / Gerrit / git workflow.'
 
     skip_upload: auto
 
-    test: |
-      system "#{bin}/beer --help"
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/beer"]
 
-    install: |
-      bin.install "beer"
-dockers:
-  - goos: linux
-    goarch: amd64
-    ids:
+    caveats: |
+      If macOS blocks execution, run:
+        xattr -dr com.apple.quarantine $(which beer)
+
+    binary: beer
+dockers_v2:
+  - ids:
       - linux-amd64
-    image_templates:
-      - 'ghcr.io/kunickiaj/beer:{{ .Tag }}'
-      - 'ghcr.io/kunickiaj/beer:latest'
+    images:
+      - 'ghcr.io/kunickiaj/beer'
+    tags:
+      - '{{ .Tag }}'
+      - latest
+    platforms:
+      - linux/amd64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: '{{ .Tag }}-next'
+  version_template: '{{ .Version }}-next'
 changelog:
   sort: asc
   filters:
