@@ -3,7 +3,7 @@ module github.com/kunickiaj/beer
 require (
 	github.com/99designs/keyring v1.2.2
 	github.com/andygrunwald/go-jira v1.17.0
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
